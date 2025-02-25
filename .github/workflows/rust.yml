@@ -25,14 +25,21 @@ jobs:
     - name: Install Dixous-CLI
       run: cargo install dioxus-cli --version 0.6.3
 
+    - name: Generate Tailwind CSS
+      uses: ZoeyVid/tailwindcss-update@v1.4.0
+      with:
+        input: input.css
+        output: assets/tailwind.css
+        params: "--minify"
+
+    - name: Create .env File
+      run: echo "${{ secrets.ENV_FILE }}" > .env
+
     - name: Build Web Page
       run: dx build --platform web --release
-      env:
-        TOASTER_API_BASE: ${{ secrets.TOASTER_API_BASE }}
-        TOASTER_API_KEY: ${{ secrets.TOASTER_API_KEY }}
-        TOASTER_API_MODEL: ${{ secrets.TOASTER_API_MODEL }}
 
-    - uses: cloudflare/wrangler-action@v3
+    - name: Deploy to Cloudflare Page
+      uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
