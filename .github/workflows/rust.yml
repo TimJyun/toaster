@@ -32,7 +32,6 @@ jobs:
       with:
         input: input.css
         output: assets/tailwind.css
-        params: "--minify"
 
     - name: Create .env File
       run: echo "${{ secrets.ENV_FILE }}" > .env
