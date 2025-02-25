@@ -48,5 +48,4 @@ jobs:
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        environment: production
-        command: pages deploy target/dx/toaster/release/web/public --project-name=toaster
+        command: pages deploy target/dx/toaster/release/web/public --project-name=toaster --branch production
