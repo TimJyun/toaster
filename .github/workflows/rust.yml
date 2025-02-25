@@ -40,6 +40,9 @@ jobs:
     - name: Build Web Page
       run: dx build --platform web --release
 
+    - name: Install npx
+      run: sudo apt install npm
+
     - name: Deploy to Cloudflare Page
       uses: cloudflare/wrangler-action@v3
       with:
