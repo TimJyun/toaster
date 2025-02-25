@@ -27,11 +27,11 @@ jobs:
     - name: Install Dixous-CLI
       run: cargo binstall dioxus-cli --version 0.6.3
 
+    - name: Install Npm
+      run: sudo apt install -y npm
+
     - name: Generate Tailwind CSS
-      uses: ZoeyVid/tailwindcss-update@v1.4.0
-      with:
-        input: input.css
-        output: assets/tailwind.css
+      run: npx tailwindcss@4 -i ./input.css -o ./assets/tailwind.css
 
     - name: Create .env File
       run: echo "${{ secrets.ENV_FILE }}" > .env
