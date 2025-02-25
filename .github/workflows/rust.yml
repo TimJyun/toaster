@@ -31,7 +31,7 @@ jobs:
       run: sudo apt install -y npm
 
     - name: Install Tailwind CSS
-      run: npm i @tailwindcss/cli
+      run: npm install tailwindcss @tailwindcss/cli
 
     - name: Generate Tailwind CSS
       run: npx @tailwindcss/cli -i ./input.css -o ./assets/tailwind.css
