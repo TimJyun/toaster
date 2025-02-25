@@ -22,8 +22,10 @@ jobs:
     - name: Install Nasm
       run: sudo apt install -y nasm
 
+    - uses: cargo-bins/cargo-binstall@main
+
     - name: Install Dixous-CLI
-      run: cargo install dioxus-cli --version 0.6.3
+      run: cargo binstall dioxus-cli --version 0.6.3
 
     - name: Generate Tailwind CSS
       uses: ZoeyVid/tailwindcss-update@v1.4.0

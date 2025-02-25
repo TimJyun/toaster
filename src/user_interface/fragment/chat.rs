@@ -214,7 +214,7 @@ pub fn ChatFragment(session_name: Signal<String>) -> Element {
                     textarea {
                         class: "w-full resize-none min-h-8 focus:outline-none",
                         value: draft_signal,
-                        placeholder: "message",
+                        placeholder: if session_read.is_locking() { "AI推理中" } else { "消息" },
                         oninput: move |evt| {
                             draft_signal.set(evt.value());
                         },

@@ -76,6 +76,8 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
             })
             .unwrap_or("<无聊天记录>".to_string());
 
+        let m = m.chars().take(120).collect::<String>();
+
         let on_select = {
             to_owned![n];
             move |_| {

@@ -14,7 +14,10 @@ use chrono::{Duration, Utc};
 use dioxus::prelude::{Signal, Task, Writable, spawn};
 use futures::StreamExt;
 use std::ops::{Add, DerefMut};
+use std::sync::atomic::AtomicIsize;
 use tracing::{debug, error};
+
+pub static INFERENCING: AtomicIsize = AtomicIsize::new(0);
 
 pub async fn start_inference(session_name: String, msg: String) -> Result<Task, anyhow::Error> {
     let client = Client::with_config(
@@ -51,6 +54,7 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
     let mut stream = client.chat().create_stream(request).await?;
 
     debug!("spawn stream success");
+    INFERENCING.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     Ok(spawn(async move {
         session
             .messages
@@ -101,6 +105,7 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
         }
         session.lock_until = None;
         let _ = session_store.set(&session_name, &session).await;
+        INFERENCING.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
         debug!("stream read to end");
     }))
 }

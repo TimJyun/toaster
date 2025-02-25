@@ -7,7 +7,6 @@ edition = "2024"
 opt-level = 3
 codegen-units = 1
 lto = true
-incremental = false
 
 [profile.wasm-dev]
 inherits = "dev"
@@ -66,6 +65,7 @@ web-sys = { version = "0.3", optional = true, features = [
     "SpeechSynthesis",
     "SpeechSynthesisUtterance",
     "SpeechSynthesisVoice",
+    "BeforeUnloadEvent"
 ] }
 js-sys = { version = "0.3", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
