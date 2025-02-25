@@ -1,0 +1,39 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - run: rustup toolchain install stable --profile minimal
+
+    - uses: Swatinem/rust-cache@v2
+
+    - run: rustup target add wasm32-unknown-unknown
+
+    - name: Install Nasm
+      run: sudo apt install -y nasm
+
+    - name: Install Dixous-CLI
+      run: cargo install dioxus-cli --version 0.6.3
+
+    - name: Build Web Page
+      run: dx build --platform web --release
+      env:
+        TOASTER_API_BASE: ${{ secrets.TOASTER_API_BASE }}
+        TOASTER_API_KEY: ${{ secrets.TOASTER_API_KEY }}
+        TOASTER_API_MODEL: ${{ secrets.TOASTER_API_MODEL }}
+
+    - uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy target/dx/toaster/release/web/public --project-name=toaster
