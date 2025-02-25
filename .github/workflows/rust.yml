@@ -31,7 +31,7 @@ jobs:
       run: sudo apt install -y npm
 
     - name: Generate Tailwind CSS
-      run: npx tailwindcss@4 -i ./input.css -o ./assets/tailwind.css
+      run: npx tailwindcss/cli@4 -i ./input.css -o ./assets/tailwind.css
 
     - name: Create .env File
       run: echo "${{ secrets.ENV_FILE }}" > .env
