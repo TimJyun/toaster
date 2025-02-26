@@ -45,8 +45,9 @@ pub fn MarkdownFragment(md_text: String) -> Element {
 
             let set_height = format!(
                 r#"let iframe = document.getElementById('{id}');
-                if(iframe && iframe?.contentWindow?.document?.documentElement && iframe.style.height != iframe.contentWindow.document.documentElement.scrollHeight + 'px'){{
-                    iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
+                let docEle = iframe?.contentWindow?.document?.documentElement;
+                if(iframe && docEle && iframe.style.height != docEle.scrollHeight + 'px'){{
+                    iframe.style.height = docEle.scrollHeight + 'px';
                 }};"#,
             );
             for _ in 0..20 {

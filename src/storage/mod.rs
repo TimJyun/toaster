@@ -10,6 +10,7 @@ use std::ops::{Deref, DerefMut};
 
 pub mod endpoint;
 pub mod session;
+mod setting;
 
 pub struct Store<T: Serialize + DeserializeOwned> {
     db_name: &'static str,

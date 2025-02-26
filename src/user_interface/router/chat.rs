@@ -34,9 +34,7 @@ pub fn ChatPage(session_name: String) -> Element {
     let changed = session_name_signal.read().as_str() != session_name.as_str();
     if changed {
         //spawn避免警告
-        spawn(async move{
-            *session_name_signal.write() = session_name.to_string()
-        });
+        spawn(async move { *session_name_signal.write() = session_name.to_string() });
     }
 
     rsx! {

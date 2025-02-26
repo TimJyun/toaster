@@ -125,7 +125,10 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                     span { class: "border rounded-xl p-1", "新会话" }
                 }
                 span { class: "flex-1" }
-                Link { class: "hidden", to: AppRoute::EndpointPage {}, "管理模型" }
+                Link {
+                    // class: "hidden",
+
+                    to: AppRoute::EndpointPage {}, "管理模型" }
             }
             div { class: "flex-1 overflow-y-scroll space-y-2", {x} }
         }

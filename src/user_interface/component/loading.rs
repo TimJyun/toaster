@@ -1,7 +1,5 @@
 use crate::user_interface::client_util::get_user_language;
 
-use crate::imgs::DELETE_TRASH_ICON_50_50;
-use crate::imgs::PEN_ICON_50_50;
 
 use dioxus::core_macro::component;
 use dioxus::dioxus_core::Element;

@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 
 use dioxus_router::prelude::{Outlet, use_navigator};
 
-use crate::imgs::BACK_ICON_50_50;
+use crate::imgs::ARROW_LEFT;
 use crate::user_interface::router::AppRoute;
 
 pub const TOP_NAVIGATION_HEIGHT: usize = 48;
@@ -15,7 +15,7 @@ pub fn TopNavigation() -> Element {
         div { class: "w-full h-full flex flex-col",
             div { class: "bg-white h-12 w-full",
                 GoBackButton {
-                    img { class: "size-6 m-3", src: BACK_ICON_50_50 }
+                    img { class: "size-6 m-3", src: ARROW_LEFT }
                 }
             }
             div { class: "flex-1 overflow-y-scroll", Outlet::<AppRoute> {} }
