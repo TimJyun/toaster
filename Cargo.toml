@@ -75,7 +75,7 @@ dioxus-desktop = { version = "0.6", optional = true }
 # mobile only
 dioxus-mobile = { version = "0.6", optional = true }
 # native only
-tokio = { version = "*", optional = true }
+tokio = { version = "*", optional = true ,features = ["time"] }
 
 #async-openai = { version ="0.27",optional = true}
 async-openai-wasm = { version = "0.27" }

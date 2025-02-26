@@ -22,7 +22,6 @@ impl WindowSize {
     }
 }
 
-#[cfg(any(feature = "web", feature = "desktop"))]
 fn get_window_size() -> WindowSize {
     #[cfg(feature = "web")]
     {
@@ -50,8 +49,10 @@ fn get_window_size() -> WindowSize {
         };
     }
 
+    //todo : android and ios
+
     return WindowSize {
-        width: 800.0,
-        height: 600.0,
+        width: 1080.0,
+        height: 1920.0,
     };
 }

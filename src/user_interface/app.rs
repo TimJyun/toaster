@@ -29,7 +29,8 @@ pub(crate) fn app() -> Element {
         document::Stylesheet { href: _CUSTOM }
     };
     if { *NEED_UPDATE.read() == true } {
-        dioxus_signals::warnings::signal_write_in_component_body::allow(|| {
+        //spawn避免警告
+        spawn(async move {
             *NEED_UPDATE.write() = false;
         });
         return rsx! {

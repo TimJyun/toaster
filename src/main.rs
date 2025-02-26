@@ -14,12 +14,12 @@ mod user_interface;
 mod util;
 
 use crate::user_interface::app::app;
-use js_sys::wasm_bindgen::JsCast;
-use js_sys::wasm_bindgen::closure::Closure;
 
 fn main() {
     #[cfg(feature = "web")]
     {
+        use js_sys::wasm_bindgen::JsCast;
+        use js_sys::wasm_bindgen::closure::Closure;
         if let Some(window) = web_sys::window() {
             let closure: Closure<dyn Fn(web_sys::BeforeUnloadEvent)> =
                 Closure::new(move |event: web_sys::BeforeUnloadEvent| {

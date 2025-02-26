@@ -33,7 +33,8 @@ pub fn ChatPage(session_name: String) -> Element {
     let mut session_name_signal = use_signal(|| session_name.to_string());
     let changed = session_name_signal.read().as_str() != session_name.as_str();
     if changed {
-        dioxus_signals::warnings::signal_write_in_component_body::allow(|| {
+        //spawn避免警告
+        spawn(async move{
             *session_name_signal.write() = session_name.to_string()
         });
     }
