@@ -1,3 +1,4 @@
+use crate::imgs::DELETE;
 use dioxus::prelude::*;
 use std::collections::HashMap;
 
@@ -93,10 +94,12 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                     span { onclick: on_select.clone(), "{n}" }
                     span { class: "flex-1" }
                     input {
-                        class: "disabled:text-gray-400 px-2",
+                        class: "size-8 px-2",
+                        class: if s.is_locking() { "hidden" },
                         disabled: s.is_locking(),
-                        r#type: "button",
-                        value: "X",
+                        r#type: "image",
+                        alt: "delete",
+                        src: DELETE,
                         onclick: {
                             to_owned![n];
                             move |_| {
@@ -128,7 +131,9 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                 Link {
                     // class: "hidden",
 
-                    to: AppRoute::EndpointPage {}, "管理模型" }
+                    to: AppRoute::EndpointPage {},
+                    "管理模型"
+                }
             }
             div { class: "flex-1 overflow-y-scroll space-y-2", {x} }
         }

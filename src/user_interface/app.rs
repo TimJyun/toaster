@@ -29,7 +29,7 @@ pub(crate) fn app() -> Element {
         document::Stylesheet { href: _CUSTOM }
     };
     if { *NEED_UPDATE.read() == true } {
-        //spawn避免警告
+        // spawn避免警告
         spawn(async move {
             *NEED_UPDATE.write() = false;
         });
@@ -39,6 +39,12 @@ pub(crate) fn app() -> Element {
     }
 
     let mut window_size_signal = use_window_size_provider();
+    // let mut setting = use_setting_provider();
+    // use_resource(move || async move {
+    //     if !setting.peek().initialized {
+    //         setting.write().initialized= true;
+    //     }
+    // });
 
     rsx! {
         {css}

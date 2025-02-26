@@ -1,7 +1,5 @@
 use crate::user_interface::client_util::get_user_language;
 
-
-
 use dioxus::core_macro::component;
 use dioxus::dioxus_core::Element;
 use dioxus::hooks::use_signal;

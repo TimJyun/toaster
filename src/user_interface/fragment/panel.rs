@@ -2,6 +2,7 @@ use crate::user_interface::fragment::chat::ChatFragment;
 use crate::user_interface::fragment::session_list::SessionListFragment;
 use crate::user_interface::router::AppRoute;
 
+use crate::imgs::MENU;
 use crate::user_interface::window::{use_window_size, use_window_size_provider};
 use dioxus::dioxus_core::Element;
 use dioxus::prelude::*;
@@ -49,9 +50,10 @@ fn WideOpenPanel(mut session_name: Signal<String>, open: Signal<bool>) -> Elemen
                 span { class: "text-3xl", "Toaster" }
                 span { class: "flex-1" }
                 input {
-                    class: "border rounded-xl p-1 m-1",
-                    r#type: "button",
-                    value: "折叠",
+                    class: "border rounded-xl p-1 m-1 size-8",
+                    r#type: "image",
+                    alt: "fold",
+                    src: MENU,
                     onclick: move |_| {
                         open.set(false);
                     },
@@ -74,9 +76,10 @@ fn WideClosePanel(open: Signal<bool>) -> Element {
     rsx! {
         div { class: "h-full",
             input {
-                class: "border rounded-xl p-1 m-1",
-                r#type: "button",
-                value: "展开",
+                class: "border rounded-xl p-1 m-1 size-8",
+                r#type: "image",
+                alt: "unfold",
+                src: MENU,
                 onclick: move |_| {
                     open.set(true);
                 },
@@ -92,10 +95,11 @@ fn NarrowPanelFragment(mut session_name: Signal<String>, open: Signal<bool>) -> 
             NarrowSideBar { session_name, open }
         } else {
             input {
-                class: "border rounded-xl p-1 m-1",
+                class: "border rounded-xl p-1 m-1 size-8",
                 class: "fixed",
-                r#type: "button",
-                value: "展开",
+                r#type: "image",
+                alt: "unfold",
+                src: MENU,
                 onclick: move |_| {
                     open.set(true);
                 },
@@ -112,7 +116,6 @@ fn NarrowSideBar(mut session_name: Signal<String>, open: Signal<bool>) -> Elemen
     rsx! {
         div {
             class: "size-full fixed bg-[rgba(0,0,0,0.4)]",
-            // style: "background-color: rgba(0,0,0,0.4);",
             onclick: move |_| {
                 debug!("confirm: cancel by background");
                 open.set(false);
