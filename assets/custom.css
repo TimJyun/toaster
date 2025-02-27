@@ -4,35 +4,47 @@ html, body, #main {
     overflow: clip;
 }
 
-/*.markdown-block * {*/
-/*    all: initial;*/
-/*}*/
 
+.markdown-block h1 {
+    font-size: 2rem;
+}
 
-/*.markdown-block h1 {*/
-/*    font-size: 2rem;*/
-/*}*/
-/*.markdown-block h2 {*/
-/*    font-size: 1.5rem;*/
-/*}*/
-/*.markdown-block h3 {*/
-/*    font-size: 1.17rem;*/
-/*}*/
-/*.markdown-block h4 {*/
-/*    font-size: 1rem;*/
-/*}*/
-/*.markdown-block h5 {*/
-/*    font-size: 0.83rem;*/
-/*}*/
-/*.markdown-block h6 {*/
-/*    font-size: 0.67rem;*/
-/*}*/
-/*.markdown-block ol, ul {*/
-/*    list-style: disc inside;*/
-/*}*/
-/*.markdown-block  ul {*/
-/*    list-style: circle inside;*/
-/*}*/
-/*.markdown-block li > p{*/
-/*    display: inline-block;*/
-/*}*/
+.markdown-block h2 {
+    font-size: 1.5rem;
+}
+
+.markdown-block h3 {
+    font-size: 1.17rem;
+}
+
+.markdown-block h4 {
+    font-size: 1rem;
+}
+
+.markdown-block h5 {
+    font-size: 0.83rem;
+}
+
+.markdown-block h6 {
+    font-size: 0.67rem;
+}
+
+.markdown-block ol {
+    list-style: circle outside;
+    margin-left: 32px;
+}
+
+.markdown-block ul {
+    list-style: disc outside;
+    margin-left: 32px;
+}
+
+.markdown-block code, kbd, samp, pre {
+    background-color: #e2e2e2;
+    overflow-x: scroll;
+}
+
+.markdown-block samp, pre {
+    margin: 8px 16px;
+    padding: 8px 8px;
+}

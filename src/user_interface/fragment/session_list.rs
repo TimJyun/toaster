@@ -129,8 +129,7 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                 }
                 span { class: "flex-1" }
                 Link {
-                    // class: "hidden",
-
+                    class: "hidden",
                     to: AppRoute::EndpointPage {},
                     "管理模型"
                 }
