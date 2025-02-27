@@ -29,6 +29,10 @@ html, body, #main {
     font-size: 0.67rem;
 }
 
+.markdown-block a {
+    color: rgb(56, 115, 173);
+}
+
 .markdown-block ol {
     list-style: circle outside;
     margin-left: 32px;
