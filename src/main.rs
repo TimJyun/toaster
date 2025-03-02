@@ -14,6 +14,7 @@ mod user_interface;
 mod util;
 
 use crate::user_interface::app::app;
+use dioxus_signals::Readable;
 
 fn main() {
     #[cfg(feature = "web")]

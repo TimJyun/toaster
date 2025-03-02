@@ -1,10 +1,10 @@
-use crate::storage::Store;
+use crate::storage::data_store::DataStore;
 use async_openai_wasm::types::ChatCompletionRequestMessage;
 use chrono::Utc;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 
-pub static SESSION_STORE: Store<Session> = Store::new("sessions");
+pub static SESSION_STORE: DataStore<Session> = DataStore::new("sessions");
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct Session {
@@ -36,10 +36,10 @@ impl Default for Session {
     }
 }
 
-pub async fn get_session_store() -> &'static Store<Session> {
+pub async fn get_session_store() -> &'static DataStore<Session> {
     &SESSION_STORE
 }
 
-pub fn use_session_store() -> &'static Store<Session> {
+pub fn use_session_store() -> &'static DataStore<Session> {
     &SESSION_STORE
 }

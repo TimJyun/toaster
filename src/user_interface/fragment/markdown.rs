@@ -13,15 +13,9 @@ use uuid::Uuid;
 
 #[component]
 pub fn MarkdownFragment(md_text: String) -> Element {
-    let html = markdown::to_html_with_options(
-        md_text.as_str(),
-        &Options::gfm(),
-    )
-    .unwrap_or_default();
+    let html =
+        markdown::to_html_with_options(md_text.as_str(), &Options::gfm()).unwrap_or_default();
     rsx! {
-        div{
-            class:"markdown-block",
-            dangerous_inner_html:html,
-        }
+        div { class: "markdown-block", dangerous_inner_html: html }
     }
 }

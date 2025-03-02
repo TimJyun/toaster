@@ -1,7 +1,13 @@
+use crate::storage::session::{Session, get_session_store};
+use crate::storage::setting::{Setting, get_setting};
 use crate::user_interface::component::confirm_box::ConfirmBox;
 use crate::user_interface::component::loading::Loading;
 use crate::user_interface::router::AppRoute;
 use crate::user_interface::window::{WindowSize, use_window_size_provider};
+use async_openai_wasm::types::{
+    ChatCompletionRequestAssistantMessage, ChatCompletionRequestAssistantMessageContent,
+    ChatCompletionRequestMessage,
+};
 use dioxus::core_macro::rsx;
 use dioxus::dioxus_core::Element;
 use dioxus::document::Link;
@@ -24,6 +30,8 @@ const _CUSTOM: Asset = asset!("/assets/custom.css");
 static NEED_UPDATE: GlobalSignal<bool> = Signal::global(|| false);
 
 pub(crate) fn app() -> Element {
+    let _init_app = use_future(init);
+
     let css = rsx! {
         document::Stylesheet { href: _TAILWIND }
         document::Stylesheet { href: _CUSTOM }
@@ -39,12 +47,6 @@ pub(crate) fn app() -> Element {
     }
 
     let mut window_size_signal = use_window_size_provider();
-    // let mut setting = use_setting_provider();
-    // use_resource(move || async move {
-    //     if !setting.peek().initialized {
-    //         setting.write().initialized= true;
-    //     }
-    // });
 
     rsx! {
         {css}
@@ -68,6 +70,38 @@ pub(crate) fn app() -> Element {
             }
         }
     }
+}
+
+async fn init() {
+    let setting_store = get_setting();
+    let mut setting = setting_store.get().peek().clone();
+
+    let cargo_pkg_version = env!("CARGO_PKG_VERSION");
+
+    if !setting.initialized {
+        debug!("initializing");
+        let session_store = get_session_store().await;
+        let mut session = session_store.get("help").await.unwrap_or_default();
+        session
+            .messages
+            .push(ChatCompletionRequestMessage::Assistant(
+                ChatCompletionRequestAssistantMessage {
+                    content: Some(ChatCompletionRequestAssistantMessageContent::Text(format!(
+                        "当前版本：{}",
+                        cargo_pkg_version
+                    ))),
+                    ..Default::default()
+                },
+            ));
+        let _ = session_store.set("help", &session).await;
+        debug!("initialize success");
+    }
+
+    if setting.current_version != cargo_pkg_version {
+        setting.current_version = cargo_pkg_version.to_string();
+    }
+
+    let _ = setting_store.set(setting);
 }
 
 #[cfg(feature = "web")]
