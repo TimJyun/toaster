@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 #[component]
-pub fn MarkdownFragment(md_text: String) -> Element {
+pub fn Markdown(md_text: String) -> Element {
     let html =
         markdown::to_html_with_options(md_text.as_str(), &Options::gfm()).unwrap_or_default();
     rsx! {

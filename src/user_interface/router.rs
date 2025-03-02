@@ -23,8 +23,8 @@ mod model;
 pub enum AppRoute {
     #[route("/")]
     IndexPage{},
-    #[route("/chat/:session_name")]
-    ChatPage{session_name:String },
+    #[route("/chat/:session_id")]
+    ChatPage{session_id:String },
     #[layout(Navigation)]
     #[end_layout]
     //
@@ -50,7 +50,6 @@ fn PageNotFound(route: Vec<String>) -> Element {
         sleep(2_000).await;
         nav.replace(AppRoute::IndexPage {});
     });
-    //todo
     rsx! {
         h1 { "Page Not Found" }
         div { "forward to index page in 2 second" }

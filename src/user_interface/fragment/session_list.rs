@@ -22,8 +22,7 @@ use tracing::{debug, info};
 pub type SessionName = String;
 
 #[component]
-pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Element {
-    let onselect = use_memo(use_reactive!(|onselect| { onselect }));
+pub fn SessionListFragment() -> Element {
     let session_store = use_session_store();
 
     let mut name_with_session_res = use_resource(|| async {
@@ -38,7 +37,7 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
     });
     let name_with_session = name_with_session_res.suspend()?;
     let name_with_session_read = name_with_session.read();
-    let x = name_with_session_read.iter().map(|(n, s)| {
+    let x = name_with_session_read.iter().map(|(id, s)| {
         let m = s
             .messages
             .last()
@@ -78,20 +77,17 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
             .unwrap_or("<无聊天记录>".to_string());
 
         let m = m.chars().take(120).collect::<String>();
-
-        let on_select = {
-            to_owned![n];
-            move |_| {
-                if let Some(onselect) = onselect.read().as_ref() {
-                    onselect.call(n.to_string());
-                }
-            }
-        };
+        let n = &s.name;
 
         rsx! {
             div { class: "odd:bg-gray-200",
                 div { class: "flex flex-row",
-                    span { onclick: on_select.clone(), "{n}" }
+                    Link {
+                        to: AppRoute::ChatPage {
+                            session_id: id.to_string(),
+                        },
+                        "{n}"
+                    }
                     span { class: "flex-1" }
                     input {
                         class: "size-8 px-2",
@@ -101,13 +97,13 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                         alt: "delete",
                         src: DELETE,
                         onclick: {
-                            to_owned![n];
+                            to_owned![id];
                             move |_| {
-                                to_owned![n];
+                                to_owned![id];
                                 async move {
                                     if confirm(vec!["您确定要删掉该会话？"]).await {
                                         let session_storage = get_session_store().await;
-                                        if let Ok(_) = session_storage.delete(n).await {
+                                        if let Ok(_) = session_storage.delete(id).await {
                                             name_with_session_res.restart();
                                         }
                                     }
@@ -116,7 +112,13 @@ pub fn SessionListFragment(onselect: Option<EventHandler<SessionName>>) -> Eleme
                         },
                     }
                 }
-                div { class: "text-xs text-gray-500", onclick: on_select, {m} }
+                Link {
+                    class: "text-xs text-gray-500",
+                    to: AppRoute::ChatPage {
+                        session_id: id.to_string(),
+                    },
+                    {m}
+                }
             }
         }
     });

@@ -10,39 +10,39 @@ use dioxus_signals::{Signal, Writable};
 use tracing::debug;
 
 #[component]
-pub fn PanelFragment(mut session_name: Signal<String>) -> Element {
+pub fn PanelFragment(mut session_id: Memo<String>) -> Element {
     let window_signal = use_window_size();
     let open = use_signal(|| window_signal.read().is_widescreen());
 
     if window_signal.read().is_widescreen() {
         rsx! {
-            WidePanelFragment { session_name, open }
+            WidePanelFragment { session_id, open }
         }
     } else {
         rsx! {
-            NarrowPanelFragment { session_name, open }
+            NarrowPanelFragment { session_id, open }
         }
     }
 }
 
 #[component]
-fn WidePanelFragment(mut session_name: Signal<String>, open: Signal<bool>) -> Element {
+fn WidePanelFragment(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
     rsx! {
         div { class: "size-full flex flex-row",
             if open() {
-                WideOpenPanel { session_name, open }
+                WideOpenPanel { session_id, open }
             } else {
                 WideClosePanel { open }
             }
             div { class: "h-full flex-1",
-                ChatFragment { session_name }
+                ChatFragment { session_id }
             }
         }
     }
 }
 
 #[component]
-fn WideOpenPanel(mut session_name: Signal<String>, open: Signal<bool>) -> Element {
+fn WideOpenPanel(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
     let nav = use_navigator();
     rsx! {
         div { class: "h-full w-1/5",
@@ -59,14 +59,7 @@ fn WideOpenPanel(mut session_name: Signal<String>, open: Signal<bool>) -> Elemen
                     },
                 }
             }
-            SessionListFragment {
-                onselect: move |selected| {
-                    debug!("change to: {selected}");
-                    nav.push(AppRoute::ChatPage {
-                        session_name: selected,
-                    });
-                },
-            }
+            SessionListFragment {}
         }
     }
 }
@@ -89,10 +82,10 @@ fn WideClosePanel(open: Signal<bool>) -> Element {
 }
 
 #[component]
-fn NarrowPanelFragment(mut session_name: Signal<String>, open: Signal<bool>) -> Element {
+fn NarrowPanelFragment(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
     rsx! {
         if open() {
-            NarrowSideBar { session_name, open }
+            NarrowSideBar { session_id, open }
         } else {
             input {
                 class: "border rounded-xl p-1 m-1 size-8",
@@ -105,12 +98,12 @@ fn NarrowPanelFragment(mut session_name: Signal<String>, open: Signal<bool>) -> 
                 },
             }
         }
-        ChatFragment { session_name }
+        ChatFragment { session_id }
     }
 }
 
 #[component]
-fn NarrowSideBar(mut session_name: Signal<String>, open: Signal<bool>) -> Element {
+fn NarrowSideBar(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
     let nav = use_navigator();
 
     rsx! {
@@ -127,15 +120,7 @@ fn NarrowSideBar(mut session_name: Signal<String>, open: Signal<bool>) -> Elemen
                     debug!("confirm: stop propagation");
                     evt.stop_propagation();
                 },
-                SessionListFragment {
-                    onselect: move |selected| {
-                        debug!("change to: {selected}");
-                        nav.push(AppRoute::ChatPage {
-                            session_name: selected,
-                        });
-                        open.set(false);
-                    },
-                }
+                SessionListFragment {                }
             }
         }
     }

@@ -21,23 +21,12 @@ use futures::{AsyncReadExt, FutureExt};
 use std::ops::Deref;
 use std::str::FromStr;
 use tracing::{debug, info};
-
-pub fn now() -> String {
-    let time = chrono::Local::now();
-    format!(
-        "{:02}{:02}{:02}-{:02}:{:02}",
-        time.year() % 2000,
-        time.month(),
-        time.day(),
-        time.hour(),
-        time.minute(),
-    )
-}
+use uuid::Uuid;
 
 pub fn IndexPage() -> Element {
-    let mut session_name = use_signal(now);
+    let mut session_id = use_memo(|| Uuid::new_v4().to_string());
 
     rsx! {
-        PanelFragment { session_name }
+        PanelFragment { session_id }
     }
 }

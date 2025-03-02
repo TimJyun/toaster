@@ -93,15 +93,11 @@ async fn init() {
                     ..Default::default()
                 },
             ));
+        setting.initialized = true;
         let _ = session_store.set("help", &session).await;
+        let _ = setting_store.set(setting);
         debug!("initialize success");
     }
-
-    if setting.current_version != cargo_pkg_version {
-        setting.current_version = cargo_pkg_version.to_string();
-    }
-
-    let _ = setting_store.set(setting);
 }
 
 #[cfg(feature = "web")]

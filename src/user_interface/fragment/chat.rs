@@ -1,7 +1,7 @@
 use crate::openai::start_inference;
 use crate::storage::endpoint::get_endpoint_store;
 use crate::storage::session::get_session_store;
-use crate::user_interface::fragment::markdown::MarkdownFragment;
+use crate::user_interface::component::markdown::Markdown;
 use crate::user_interface::fragment::session_list::SessionListFragment;
 use crate::user_interface::router::AppRoute;
 use async_openai_wasm::types::{
@@ -19,14 +19,14 @@ use std::ops::Deref;
 use tracing::debug;
 
 #[component]
-pub fn ChatFragment(session_name: Signal<String>) -> Element {
+pub fn ChatFragment(session_id: Memo<String>) -> Element {
     let nav = use_navigator();
 
     let mut session_endpoints_res = use_resource(move || async move {
         let session_storage = get_session_store().await;
-        let session_name = session_name.read().to_string();
+        let session_id = session_id.read().to_string();
 
-        let mut session = session_storage.get(session_name).await.unwrap_or_default();
+        let mut session = session_storage.get(session_id).await.unwrap_or_default();
 
         let endpoint_store = get_endpoint_store().await;
         let endpoints = endpoint_store.list().await;
@@ -133,7 +133,7 @@ pub fn ChatFragment(session_name: Signal<String>) -> Element {
                 rsx! {}
             } else {
                 rsx! {
-                    MarkdownFragment { md_text: answer }
+                    Markdown { md_text: answer }
                 }
             };
 
@@ -169,10 +169,10 @@ pub fn ChatFragment(session_name: Signal<String>) -> Element {
                         let endpoint = evt.value().to_string();
                         async move {
                             let session_storage = get_session_store().await;
-                            let session_name = session_name.peek().to_string();
-                            if let Ok(mut session) = session_storage.get(&session_name).await {
+                            let session_id = session_id.peek().to_string();
+                            if let Ok(mut session) = session_storage.get(&session_id).await {
                                 session.endpoint = endpoint;
-                                if let Err(err) = session_storage.set(session_name, &session).await {
+                                if let Err(err) = session_storage.set(session_id, &session).await {
                                     debug!("change model failed : {err}");
                                 }
                             }
@@ -183,19 +183,16 @@ pub fn ChatFragment(session_name: Signal<String>) -> Element {
                 input {
                     class: "w-auto min-w-20",
                     disabled: session_read.is_locking(),
-                    initial_value: session_name.to_string(),
+                    initial_value: session_read.name.to_string(),
                     onchange: move |evt: Event<FormData>| {
                         let new_name = evt.value();
                         async move {
                             if let Err(err) = async move {
                                 let session_store = get_session_store().await;
-                                let session_name = session_name.peek().to_string();
-                                if let Ok(s) = session_store.get(&session_name).await {
-                                    session_store.set(&new_name, &s).await?;
-                                    let _ = session_store.delete(&session_name).await;
-                                    nav.replace(AppRoute::ChatPage {
-                                        session_name: new_name,
-                                    });
+                                let session_id = session_id.peek().to_string();
+                                if let Ok(mut s) = session_store.get(&session_id).await {
+                                    s.name = new_name;
+                                    session_store.set(&session_id, &s).await?;
                                 }
                                 anyhow::Ok(())
                             }
@@ -227,23 +224,15 @@ pub fn ChatFragment(session_name: Signal<String>) -> Element {
                         r#type: "button",
                         disabled: draft_signal.read().is_empty() || session_read.is_locking(),
                         value: "发送",
-                        onclick: {
-                            let session = session_read.clone();
-                            to_owned![session_name];
-                            move |_| {
-                                to_owned![session_name, session];
-                                async move {
-                                    to_owned![session_name, session];
-                                    let draft = draft_signal.peek().to_string();
-                                    let session_name = session_name.peek().to_string();
-                                    match start_inference(session_name, draft).await {
-                                        Ok(_) => {
-                                            *draft_signal.write() = String::new();
-                                        }
-                                        Err(err) => {
-                                            debug!("start failed error : {err}");
-                                        }
-                                    }
+                        onclick: move |_| async move {
+                            let draft = draft_signal.peek().to_string();
+                            let session_id = session_id.peek().to_string();
+                            match start_inference(session_id, draft).await {
+                                Ok(_) => {
+                                    *draft_signal.write() = String::new();
+                                }
+                                Err(err) => {
+                                    debug!("start failed error : {err}");
                                 }
                             }
                         },

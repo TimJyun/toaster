@@ -16,7 +16,7 @@ use crate::tts::tts::TextToSpeech;
 use crate::user_interface::app::refresh_app;
 use crate::user_interface::fragment::panel::PanelFragment;
 use crate::user_interface::fragment::session_list::SessionName;
-use crate::user_interface::router::index::now;
+
 use async_openai_wasm::types::{
     ChatCompletionRequestAssistantMessageContent, ChatCompletionRequestAssistantMessageContentPart,
     ChatCompletionRequestMessage, ChatCompletionRequestUserMessageContent,
@@ -29,15 +29,10 @@ use std::str::FromStr;
 use tracing::{debug, info};
 
 #[component]
-pub fn ChatPage(session_name: String) -> Element {
-    let mut session_name_signal = use_signal(|| session_name.to_string());
-    let changed = session_name_signal.read().as_str() != session_name.as_str();
-    if changed {
-        //spawn避免警告
-        spawn(async move { *session_name_signal.write() = session_name.to_string() });
-    }
+pub fn ChatPage(session_id: String) -> Element {
+    let session_id = use_memo(use_reactive!(|session_id| { session_id }));
 
     rsx! {
-        PanelFragment { session_name: session_name_signal }
+        PanelFragment { session_id }
     }
 }
