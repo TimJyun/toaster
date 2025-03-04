@@ -6,7 +6,7 @@ use crate::user_interface::router::AppRoute;
 
 use crate::user_interface::component::loading::Loading;
 
-use crate::storage::session::{get_session_store, use_session_store};
+use crate::storage::session::{Role, get_session_store, use_session_store};
 
 use crate::user_interface::component::confirm_box::confirm;
 use async_openai_wasm::types::{
@@ -18,8 +18,6 @@ use futures::{AsyncReadExt, FutureExt};
 use std::ops::Deref;
 use std::str::FromStr;
 use tracing::{debug, info};
-
-pub type SessionName = String;
 
 #[component]
 pub fn SessionListFragment() -> Element {
@@ -40,41 +38,11 @@ pub fn SessionListFragment() -> Element {
     let x = name_with_session_read.iter().map(|(id, s)| {
         let m = s
             .messages
+            .iter()
+            .filter(|m| m.role == Role::Assistant)
             .last()
-            .map(|m| match m {
-                ChatCompletionRequestMessage::User(m) => {
-                    let txt = match &m.content {
-                        ChatCompletionRequestUserMessageContent::Text(text) => text.to_string(),
-                        ChatCompletionRequestUserMessageContent::Array(a) => {
-                            let mut text = String::new();
-                            for i in a.iter() {
-                                if let ChatCompletionRequestUserMessageContentPart::Text(t) = i {
-                                    text.push_str(t.text.as_str());
-                                }
-                            }
-                            text
-                        }
-                    };
-                    format!("您：{txt}")
-                }
-                ChatCompletionRequestMessage::Assistant(m) => match &m.content {
-                    Some(ChatCompletionRequestAssistantMessageContent::Text(text)) => {
-                        text.to_string()
-                    }
-                    Some(ChatCompletionRequestAssistantMessageContent::Array(a)) => {
-                        let mut text = String::new();
-                        for i in a.iter() {
-                            if let ChatCompletionRequestAssistantMessageContentPart::Text(t) = i {
-                                text.push_str(t.text.as_str());
-                            }
-                        }
-                        text
-                    }
-                    _ => String::new(),
-                },
-                _ => "<无聊天记录>".to_string(),
-            })
-            .unwrap_or("<无聊天记录>".to_string());
+            .map(|m| m.text.as_str())
+            .unwrap_or("<无聊天记录>");
 
         let m = m.chars().take(120).collect::<String>();
         let n = &s.name;

@@ -1,7 +1,8 @@
-use crate::storage::session::{Session, get_session_store};
+use crate::storage::session::{Message, Role, Session, get_session_store};
 use crate::storage::setting::{Setting, get_setting};
 use crate::user_interface::component::confirm_box::ConfirmBox;
 use crate::user_interface::component::loading::Loading;
+use crate::user_interface::component::toast::{ToastBox, make_toast};
 use crate::user_interface::router::AppRoute;
 use crate::user_interface::window::{WindowSize, use_window_size_provider};
 use async_openai_wasm::types::{
@@ -61,6 +62,7 @@ pub(crate) fn app() -> Element {
                         });
                 }
             },
+            ToastBox {}
             SuspenseBoundary {
                 fallback: |context: SuspenseContext| rsx! {
                     Loading {}
@@ -82,17 +84,12 @@ async fn init() {
         debug!("initializing");
         let session_store = get_session_store().await;
         let mut session = session_store.get("help").await.unwrap_or_default();
-        session
-            .messages
-            .push(ChatCompletionRequestMessage::Assistant(
-                ChatCompletionRequestAssistantMessage {
-                    content: Some(ChatCompletionRequestAssistantMessageContent::Text(format!(
-                        "当前版本：{}",
-                        cargo_pkg_version
-                    ))),
-                    ..Default::default()
-                },
-            ));
+        session.messages.push(Message {
+            text: format!("当前版本：{}", cargo_pkg_version),
+            role: Role::System,
+            hidden: false,
+            filtered: false,
+        });
         setting.initialized = true;
         let _ = session_store.set("help", &session).await;
         let _ = setting_store.set(setting);

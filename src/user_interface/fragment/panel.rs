@@ -43,7 +43,6 @@ fn WidePanelFragment(mut session_id: Memo<String>, open: Signal<bool>) -> Elemen
 
 #[component]
 fn WideOpenPanel(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
-    let nav = use_navigator();
     rsx! {
         div { class: "h-full w-1/5",
             div { class: "flex flex-row",
@@ -104,8 +103,6 @@ fn NarrowPanelFragment(mut session_id: Memo<String>, open: Signal<bool>) -> Elem
 
 #[component]
 fn NarrowSideBar(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
-    let nav = use_navigator();
-
     rsx! {
         div {
             class: "size-full fixed bg-[rgba(0,0,0,0.4)]",
@@ -120,7 +117,7 @@ fn NarrowSideBar(mut session_id: Memo<String>, open: Signal<bool>) -> Element {
                     debug!("confirm: stop propagation");
                     evt.stop_propagation();
                 },
-                SessionListFragment {                }
+                SessionListFragment {}
             }
         }
     }

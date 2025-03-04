@@ -2,6 +2,7 @@ use crate::openai::start_inference;
 use crate::storage::endpoint::get_endpoint_store;
 use crate::storage::session::get_session_store;
 use crate::user_interface::component::markdown::Markdown;
+use crate::user_interface::fragment::message::MessageFragment;
 use crate::user_interface::fragment::session_list::SessionListFragment;
 use crate::user_interface::router::AppRoute;
 use async_openai_wasm::types::{
@@ -20,8 +21,6 @@ use tracing::debug;
 
 #[component]
 pub fn ChatFragment(session_id: Memo<String>) -> Element {
-    let nav = use_navigator();
-
     let mut session_endpoints_res = use_resource(move || async move {
         let session_storage = get_session_store().await;
         let session_id = session_id.read().to_string();
@@ -45,110 +44,7 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
 
     let (session_read, endpoints_read) = session_endpoints_read.deref();
 
-    let msg = session_read.messages.iter().filter_map(|m| {
-        let mut is_user_sender: bool;
-        let msg = match m {
-            ChatCompletionRequestMessage::User(m) => {
-                is_user_sender = true;
-                match &m.content {
-                    ChatCompletionRequestUserMessageContent::Text(text) => text.to_string(),
-                    ChatCompletionRequestUserMessageContent::Array(a) => {
-                        let mut text = String::new();
-                        for i in a.iter() {
-                            if let ChatCompletionRequestUserMessageContentPart::Text(t) = i {
-                                text.push_str(t.text.as_str());
-                            }
-                        }
-                        text
-                    }
-                }
-            }
-            ChatCompletionRequestMessage::Assistant(m) => {
-                is_user_sender = false;
-                match &m.content {
-                    Some(ChatCompletionRequestAssistantMessageContent::Text(text)) => {
-                        text.to_string()
-                    }
-                    Some(ChatCompletionRequestAssistantMessageContent::Array(a)) => {
-                        let mut text = String::new();
-                        for i in a.iter() {
-                            if let ChatCompletionRequestAssistantMessageContentPart::Text(t) = i {
-                                text.push_str(t.text.as_str());
-                            }
-                        }
-                        text
-                    }
-                    _ => return None,
-                }
-            }
-            _ => return None,
-        };
-        let msg_dlg = if is_user_sender {
-            let paragraphs = msg.lines().map(|l| {
-                rsx! {
-                    div { "{l}" }
-                }
-            });
-
-            rsx! {
-                span { class: "flex-1" }
-                span { class: "border border-blue-100 bg-blue-100 rounded-xl m-2 p-2",
-                    {paragraphs}
-                }
-            }
-        } else {
-            let mut think;
-            let mut answer;
-
-            if let Some(0) = msg.find("<think>") {
-                if let Some(end) = msg.find("</think>") {
-                    think = &msg[7..end];
-                    answer = &msg[end + 8..msg.len()];
-                } else {
-                    think = msg.trim_start_matches("<think>");
-                    answer = "";
-                }
-            } else {
-                think = "";
-                answer = msg.as_str();
-            };
-
-            let think_node = if think.trim().is_empty() {
-                rsx! {}
-            } else {
-                let paragraphs = think.lines().map(|l| {
-                    rsx! {
-                        div { class: "text-xs text-gray-500", {l} }
-                    }
-                });
-                rsx! {
-                    details { open: true,
-                        summary { class: "text-xs text-gray-500", "思考过程" }
-                        {paragraphs}
-                    }
-                }
-            };
-
-            let answer_node = if answer.is_empty() {
-                rsx! {}
-            } else {
-                rsx! {
-                    Markdown { md_text: answer }
-                }
-            };
-
-            rsx! {
-                div { class: "w-full",
-                    {think_node}
-                    {answer_node}
-                }
-            }
-        };
-        rsx! {
-            div { class: "flex flex-row", {msg_dlg} }
-        }
-        .into()
-    });
+    let session = Readable::map(session_endpoints_signal.clone(), |(s, _)| s);
 
     let endpoints_node = endpoints_read.iter().map(|e| {
         rsx! {
@@ -205,7 +101,9 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
                 }
                 span { class: "flex-1" }
             }
-            div { class: "flex-1 overflow-y-scroll", {msg} }
+            div { class: "flex-1 overflow-y-scroll",
+                MessageFragment { session }
+            }
             div { class: "border border-blue-500 rounded-xl m-2 p-2",
                 div {
                     textarea {

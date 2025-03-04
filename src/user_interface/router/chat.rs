@@ -15,7 +15,6 @@ use crate::storage::endpoint::get_endpoint_store;
 use crate::tts::tts::TextToSpeech;
 use crate::user_interface::app::refresh_app;
 use crate::user_interface::fragment::panel::PanelFragment;
-use crate::user_interface::fragment::session_list::SessionName;
 
 use async_openai_wasm::types::{
     ChatCompletionRequestAssistantMessageContent, ChatCompletionRequestAssistantMessageContentPart,

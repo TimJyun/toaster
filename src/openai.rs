@@ -1,5 +1,6 @@
 use crate::env::{TOASTER_API_BASE, TOASTER_API_KEY, TOASTER_API_MODEL};
-use crate::storage::session::{Session, get_session_store};
+use crate::storage::session::{Message, Role, Session, get_session_store};
+use crate::user_interface::component::toast::make_toast;
 use crate::util::sleep::sleep;
 use anyhow::{Error, anyhow};
 use async_openai_wasm::Client;
@@ -8,7 +9,8 @@ use async_openai_wasm::types::{
     ChatCompletionRequestAssistantMessage, ChatCompletionRequestAssistantMessageContent,
     ChatCompletionRequestAssistantMessageContentPart, ChatCompletionRequestMessage,
     ChatCompletionRequestMessageContentPartText, ChatCompletionRequestUserMessage,
-    ChatCompletionRequestUserMessageContent, CreateChatCompletionRequest,
+    ChatCompletionRequestUserMessageContent, ChatCompletionResponseStream,
+    CreateChatCompletionRequest,
 };
 use chrono::{Duration, Utc};
 use dioxus::prelude::{Signal, Task, Writable, spawn};
@@ -36,36 +38,40 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
     const LOCK_TIMEOUT: i64 = 15;
 
     session.lock_until = Some(Utc::now() + Duration::seconds(LOCK_TIMEOUT));
-    session.messages.push(ChatCompletionRequestMessage::User(
-        ChatCompletionRequestUserMessage {
-            content: ChatCompletionRequestUserMessageContent::Text(msg),
-            name: None,
-        },
-    ));
+
     session_store.set(&session_name, &session).await?;
+
+    session.messages.push(Message {
+        text: msg,
+        role: Role::User,
+        hidden: false,
+        filtered: false,
+    });
 
     let request = CreateChatCompletionRequest {
         model: TOASTER_API_MODEL.to_string(),
-        messages: session.messages.clone(),
+        messages: session
+            .messages
+            .iter()
+            .cloned()
+            .filter_map(|m| m.try_into().ok())
+            .collect(),
         stream: Some(true),
         ..Default::default()
     };
 
+    // create_stream function is always success
     let mut stream = client.chat().create_stream(request).await?;
 
     debug!("spawn stream success");
     INFERENCING.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     Ok(spawn(async move {
-        session
-            .messages
-            .push(ChatCompletionRequestMessage::Assistant(
-                ChatCompletionRequestAssistantMessage {
-                    content: Some(ChatCompletionRequestAssistantMessageContent::Array(
-                        Vec::new(),
-                    )),
-                    ..Default::default()
-                },
-            ));
+        session.messages.push(Message {
+            text: String::new(),
+            role: Role::Assistant,
+            hidden: false,
+            filtered: false,
+        });
 
         while let Some(response) = stream.next().await {
             match response {
@@ -78,23 +84,24 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
                         )
                         .into()
                     });
-
-                    if let Some(ChatCompletionRequestMessage::Assistant(
-                        ChatCompletionRequestAssistantMessage {
-                            content: Some(ChatCompletionRequestAssistantMessageContent::Array(a)),
-                            ..
-                        },
-                    )) = session.messages.last_mut()
-                    {
+                    if let Some(m) = session.messages.last_mut() {
                         for ccs in ccs_iter {
-                            a.push(ccs);
+                            m.text.push_str(
+                                match ccs {
+                                    ChatCompletionRequestAssistantMessageContentPart::Text(
+                                        text,
+                                    ) => text.text,
+                                    ChatCompletionRequestAssistantMessageContentPart::Refusal(
+                                        refusal,
+                                    ) => refusal.refusal,
+                                }
+                                .as_str(),
+                            );
                         }
                     } else {
                         unreachable!();
                     }
-
                     session.lock_until = Some(Utc::now() + Duration::seconds(LOCK_TIMEOUT));
-
                     let _ = session_store.set(&session_name, &session).await;
                 }
                 Err(e) => {

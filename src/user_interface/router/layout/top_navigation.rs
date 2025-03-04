@@ -2,8 +2,6 @@ use std::sync::atomic::Ordering;
 
 use dioxus::prelude::*;
 
-use dioxus_router::prelude::{Outlet, use_navigator};
-
 use crate::imgs::ARROW_LEFT;
 use crate::user_interface::router::AppRoute;
 

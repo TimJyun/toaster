@@ -21,8 +21,6 @@ use tracing::{debug, info};
 
 #[component]
 pub fn EndpointPage() -> Element {
-    let nav = use_navigator();
-
     let list_res = use_resource(|| async {
         let endpoint_store = get_endpoint_store().await;
         let list = endpoint_store.list().await.unwrap_or_default();
