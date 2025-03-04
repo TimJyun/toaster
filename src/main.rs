@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-mod env;
+mod constant;
 mod error;
 mod i18n;
 mod imgs;

@@ -43,8 +43,8 @@ impl<T: Serialize + DeserializeOwned> DataStore<T> {
                 }
                 #[cfg(any(feature = "mobile", feature = "desktop"))]
                 {
-                    use crate::env::TOASTER_DATA_PATH;
-                    use crate::env::TOASTER_TMP_DATA_PATH;
+                    use crate::constant::TOASTER_DATA_PATH;
+                    use crate::constant::TOASTER_TMP_DATA_PATH;
                     use opendal::Configurator;
                     use opendal::services::FsConfig;
                     let mut fs_config = FsConfig::default();

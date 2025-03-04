@@ -1,4 +1,4 @@
-use crate::env::{TOASTER_API_BASE, TOASTER_API_KEY, TOASTER_API_MODEL};
+use crate::constant::{TOASTER_API_BASE, TOASTER_API_KEY, TOASTER_API_MODEL};
 use crate::storage::session::{Message, Role, Session, get_session_store};
 use crate::user_interface::component::toast::make_toast;
 use crate::util::sleep::sleep;

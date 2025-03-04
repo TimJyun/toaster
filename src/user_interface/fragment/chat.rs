@@ -125,7 +125,7 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
                         onclick: move |_| async move {
                             let draft = draft_signal.peek().to_string();
                             let session_id = session_id.peek().to_string();
-                            match start_inference(session_id, draft).await {
+                            match start_inference(session_id.clone(), draft).await {
                                 Ok(_) => {
                                     *draft_signal.write() = String::new();
                                 }

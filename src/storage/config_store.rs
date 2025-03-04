@@ -29,7 +29,7 @@ impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> ConfigStore<T>
         }
         #[cfg(feature = "native")]
         {
-            use crate::env::TOASTER_DATA_PATH;
+            use crate::constant::TOASTER_DATA_PATH;
             std::fs::read_to_string(format!("{TOASTER_DATA_PATH}/{config_name}"))
                 .ok()
                 .map(|str| serde_json::from_str::<T>(&str).ok())
@@ -48,8 +48,8 @@ impl<T: Serialize + DeserializeOwned + Default + Clone + 'static> ConfigStore<T>
         }
         #[cfg(feature = "native")]
         {
-            use crate::env::TOASTER_DATA_PATH;
-            use crate::env::TOASTER_TMP_DATA_PATH;
+            use crate::constant::TOASTER_DATA_PATH;
+            use crate::constant::TOASTER_TMP_DATA_PATH;
             use std::fs;
             let json_str = serde_json::to_string(value)?;
 
