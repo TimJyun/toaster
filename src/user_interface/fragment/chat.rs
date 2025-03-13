@@ -22,6 +22,7 @@ use tracing::debug;
 #[component]
 pub fn ChatFragment(session_id: Memo<String>) -> Element {
     let mut session_endpoints_res = use_resource(move || async move {
+        let t1 = chrono::Utc::now().timestamp_millis();
         let session_storage = get_session_store().await;
         let session_id = session_id.read().to_string();
 
@@ -33,6 +34,8 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
         if session.endpoint.is_empty() {
             session.endpoint = endpoints.iter().next().cloned().unwrap_or_default();
         };
+        let t2 = chrono::Utc::now().timestamp_millis();
+        debug!("load ChatFragment cost : {}ms", t2 - t1);
         (session, endpoints)
     });
 

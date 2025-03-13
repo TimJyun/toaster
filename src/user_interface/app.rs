@@ -5,6 +5,7 @@ use crate::user_interface::component::loading::Loading;
 use crate::user_interface::component::toast::{ToastBox, make_toast};
 use crate::user_interface::router::AppRoute;
 use crate::user_interface::window::{WindowSize, use_window_size_provider};
+use crate::util::sleep::sleep;
 use async_openai_wasm::types::{
     ChatCompletionRequestAssistantMessage, ChatCompletionRequestAssistantMessageContent,
     ChatCompletionRequestMessage,
@@ -31,6 +32,8 @@ const _CUSTOM: Asset = asset!("/assets/custom.css");
 static NEED_UPDATE: GlobalSignal<bool> = Signal::global(|| false);
 
 pub(crate) fn app() -> Element {
+    #[cfg(feature = "web")]
+    let _keep_live = use_future(keep_live);
     let _init_app = use_future(init);
 
     let css = rsx! {
@@ -51,24 +54,30 @@ pub(crate) fn app() -> Element {
 
     rsx! {
         {css}
-        div {
-            class: "size-full",
-            onresize: move |evt| {
-                if let Ok(box_size) = evt.get_border_box_size() {
-                    window_size_signal
-                        .set(WindowSize {
-                            width: box_size.width,
-                            height: box_size.height,
-                        });
-                }
+        ErrorBoundary {
+            handle_error: |err| {
+                refresh_app();
+                rsx! { "error" }
             },
-            ToastBox {}
-            SuspenseBoundary {
-                fallback: |context: SuspenseContext| rsx! {
-                    Loading {}
+            div {
+                class: "size-full",
+                onresize: move |evt| {
+                    if let Ok(box_size) = evt.get_border_box_size() {
+                        window_size_signal
+                            .set(WindowSize {
+                                width: box_size.width,
+                                height: box_size.height,
+                            });
+                    }
                 },
-                ConfirmBox {}
-                Router::<AppRoute> {}
+                ToastBox {}
+                SuspenseBoundary {
+                    fallback: |context: SuspenseContext| rsx! {
+                        Loading {}
+                    },
+                    ConfirmBox {}
+                    Router::<AppRoute> {}
+                }
             }
         }
     }
@@ -83,7 +92,13 @@ async fn init() {
     if !setting.initialized {
         debug!("initializing");
         let session_store = get_session_store().await;
-        let mut session = session_store.get("help").await.unwrap_or_default();
+        let t1 = chrono::Local::now().timestamp_millis();
+        let mut session = { session_store.get("help").await.unwrap_or_default() };
+        let t2 = chrono::Local::now().timestamp_millis();
+        debug!(
+            "get session 'help' from session_store , cost : {}ms",
+            t2 - t1
+        );
         session.messages.push(Message {
             text: format!("当前版本：{}", cargo_pkg_version),
             role: Role::System,
@@ -92,8 +107,31 @@ async fn init() {
         });
         setting.initialized = true;
         let _ = session_store.set("help", &session).await;
+        let t3 = chrono::Local::now().timestamp_millis();
+        debug!(
+            "save session 'help' to session_store , cost : {}ms",
+            t3 - t2
+        );
         let _ = setting_store.set(setting);
         debug!("initialize success");
+    }
+}
+
+#[cfg(feature = "web")]
+async fn keep_live() {
+    document::eval(
+        r#"
+            setInterval(()=>{
+                if(window.heartbeat + 5000 < (new Date()).getTime()){
+                    window.location.reload();
+                }
+            },5000);
+            "#,
+    );
+
+    loop {
+        document::eval("window.heartbeat = new Date().getTime()");
+        sleep(1).await;
     }
 }
 

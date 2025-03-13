@@ -22,6 +22,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 use tracing::{debug, info};
 
+//todo: endpoint的主键应该是uuid
 #[component]
 pub fn ModelFragment(endpoint_name: String) -> Element {
     let nav = use_navigator();
@@ -29,13 +30,17 @@ pub fn ModelFragment(endpoint_name: String) -> Element {
     let mut busying = use_signal(|| false);
 
     let create_mode = endpoint_name.is_empty();
+    //todo: signal 不是反应式的，这里要重构逻辑
     let mut name = use_signal(use_reactive!(|endpoint_name| endpoint_name));
-    let mut endpoint_res = use_resource(use_reactive!(|endpoint_name| async move {
-        let endpoint_store = get_endpoint_store().await;
-        Signal::new(endpoint_store.get(&endpoint_name).await.unwrap_or_default())
-    }));
+    let mut endpoint = use_signal(Default::default);
 
-    let endpoint = *endpoint_res.suspend()?.read().deref();
+    let _endpoint_res = use_resource(use_reactive!(|endpoint_name| async move {
+        let endpoint_store = get_endpoint_store().await;
+        if let Ok(e) = endpoint_store.get(&endpoint_name).await {
+            endpoint.set(e);
+        }
+    }))
+    .suspend()?;
 
     rsx! {
         div {

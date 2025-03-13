@@ -6,7 +6,7 @@ use crate::user_interface::router::AppRoute;
 
 use crate::user_interface::component::loading::Loading;
 
-use crate::storage::session::{Role, get_session_store, use_session_store};
+use crate::storage::session::{get_session_store, use_session_store, Role};
 
 use crate::user_interface::component::confirm_box::confirm;
 use async_openai_wasm::types::{
@@ -24,6 +24,7 @@ pub fn SessionListFragment() -> Element {
     let session_store = use_session_store();
 
     let mut name_with_session_res = use_resource(|| async {
+        let t1 = chrono::Utc::now().timestamp_millis();
         let sessions = session_store.list().await.unwrap_or_default();
         let mut result = Vec::with_capacity(sessions.len());
         for n in sessions.into_iter() {
@@ -31,6 +32,8 @@ pub fn SessionListFragment() -> Element {
                 result.push((n, session));
             };
         }
+        let t2 = chrono::Utc::now().timestamp_millis();
+        debug!("load SessionListFragment cost : {}ms", t2 - t1);
         result
     });
     let name_with_session = name_with_session_res.suspend()?;
