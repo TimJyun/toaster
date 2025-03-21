@@ -18,10 +18,11 @@ use futures::StreamExt;
 use std::ops::{Add, DerefMut};
 use std::sync::atomic::AtomicIsize;
 use tracing::{debug, error};
+use uuid::Uuid;
 
 pub static INFERENCING: AtomicIsize = AtomicIsize::new(0);
 
-pub async fn start_inference(session_name: String, msg: String) -> Result<Task, anyhow::Error> {
+pub async fn start_inference(session_name: String, msg: Option<String>) -> Result<Task, anyhow::Error> {
     let client = Client::with_config(
         OpenAIConfig::default()
             .with_api_base(TOASTER_API_BASE)
@@ -41,12 +42,15 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
 
     session_store.set(&session_name, &session).await?;
 
-    session.messages.push(Message {
-        text: msg,
-        role: Role::User,
-        hidden: false,
-        filtered: false,
-    });
+    if let Some(text) = msg{
+        session.messages.push(Message {
+            uuid: Uuid::new_v4(),
+            text,
+            role: Role::User,
+            hidden: false,
+            filtered: false,
+        });
+    }
 
     let request = CreateChatCompletionRequest {
         model: TOASTER_API_MODEL.to_string(),
@@ -67,12 +71,12 @@ pub async fn start_inference(session_name: String, msg: String) -> Result<Task, 
     INFERENCING.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
     Ok(spawn(async move {
         session.messages.push(Message {
+            uuid: Uuid::new_v4(),
             text: String::new(),
             role: Role::Assistant,
             hidden: false,
             filtered: false,
         });
-
         while let Some(response) = stream.next().await {
             match response {
                 Ok(completion_response) => {

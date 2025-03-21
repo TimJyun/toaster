@@ -1,10 +1,10 @@
-use crate::storage::session::{Message, Role, Session, get_session_store};
-use crate::storage::setting::{Setting, get_setting};
+use crate::storage::session::{get_session_store, Message, Role, Session};
+use crate::storage::setting::{get_setting, Setting};
 use crate::user_interface::component::confirm_box::ConfirmBox;
 use crate::user_interface::component::loading::Loading;
-use crate::user_interface::component::toast::{ToastBox, make_toast};
+use crate::user_interface::component::toast::{make_toast, ToastBox};
 use crate::user_interface::router::AppRoute;
-use crate::user_interface::window::{WindowSize, use_window_size_provider};
+use crate::user_interface::window::{use_window_size_provider, WindowSize};
 use crate::util::sleep::sleep;
 use async_openai_wasm::types::{
     ChatCompletionRequestAssistantMessage, ChatCompletionRequestAssistantMessageContent,
@@ -18,13 +18,14 @@ use dioxus::prelude::*;
 use dioxus::warnings::Warning;
 use dioxus_html::head;
 use jwt_compact::UntrustedToken;
-use opendal::{Operator, services};
+use opendal::{services, Operator};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
 use std::io;
 use std::io::Error;
 use tracing::debug;
+use uuid::Uuid;
 
 const _TAILWIND: Asset = asset!("/assets/tailwind.css");
 const _CUSTOM: Asset = asset!("/assets/custom.css");
@@ -100,6 +101,8 @@ async fn init() {
             t2 - t1
         );
         session.messages.push(Message {
+            //todo:固定id
+            uuid: Uuid::new_v4(),
             text: format!("当前版本：{}", cargo_pkg_version),
             role: Role::System,
             hidden: false,

@@ -11,6 +11,7 @@ use chrono::Utc;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
+use uuid::Uuid;
 
 pub static SESSION_STORE: DataStore<Session> = DataStore::new("sessions");
 
@@ -63,6 +64,7 @@ pub enum Role {
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Message {
+    pub uuid:Uuid,
     pub text: String,
     pub role: Role,
 
@@ -131,6 +133,7 @@ impl TryFrom<ChatCompletionRequestMessage> for Message {
         };
 
         Ok(Self {
+            uuid: Uuid::new_v4(),
             text,
             role,
             hidden: false,

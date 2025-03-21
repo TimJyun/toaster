@@ -50,6 +50,10 @@ async-once-cell = "0.5"
 #dotenv = "0.15"
 dotenv_codegen = "0.15"
 markdown = "1.0.0-alpha.22"
+sha1 = "0.10"
+sha2 = "0.10"
+md-5 = "0.10"
+mime_guess = "2"
 
 # web only
 dioxus-web = { version = "0.6", optional = true }

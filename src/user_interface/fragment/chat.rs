@@ -15,9 +15,17 @@ use dioxus::core_macro::{component, rsx};
 use dioxus::dioxus_core::Element;
 use dioxus::hooks::{use_reactive, use_resource, use_signal};
 use dioxus::prelude::*;
+use dioxus_html::{FileEngine, HasFileData};
 use dioxus_signals::{Readable, Signal, Writable};
+use dioxus_web::WebFileEngineExt;
+use md5::{Digest, Md5};
+use mime_guess::Mime;
+use sha1::Sha1;
+use sha2::{Sha256, Sha512};
 use std::ops::Deref;
+use std::sync::Arc;
 use tracing::debug;
+use crate::imgs::{ARROW_DOWN_CIRCLE, ARROW_UP_CIRCLE, FILE_MULTIPLE, MICROPHONE};
 
 #[component]
 pub fn ChatFragment(session_id: Memo<String>) -> Element {
@@ -54,6 +62,19 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
             option { "{e}" }
         }
     });
+
+    let send_message_callback =move || async move {
+        let draft = draft_signal.peek().to_string();
+        let session_id = session_id.peek().to_string();
+        match start_inference(session_id.clone(), draft.into()).await {
+            Ok(_) => {
+                *draft_signal.write() = String::new();
+            }
+            Err(err) => {
+                debug!("start failed error : {err}");
+            }
+        }
+    };
 
     rsx! {
         div { class: "size-full flex flex-col",
@@ -107,7 +128,26 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
             div { class: "flex-1 overflow-y-scroll",
                 MessageFragment { session }
             }
-            div { class: "border border-blue-500 rounded-xl m-2 p-2",
+            div {
+                class: "border border-blue-500 rounded-xl m-2 p-2",
+                ondragover: move |event| {
+                    event.prevent_default();
+                },
+                ondrop: move |evt: Event<DragData>| {
+                    evt.prevent_default();
+                    async move {
+                        if let Some(fe) = evt.files() {
+                            let mut files = handle_files(fe).await;
+                            if let (1, Some(f)) = (files.len(), files.into_iter().next()) {
+                                if f.content_type.type_() == "text" {
+                                    let mut draft = draft_signal.peek().to_string();
+                                    let str = String::from_utf8_lossy(&f.data);
+                                    draft_signal.set(draft + &str);
+                                }
+                            }
+                        }
+                    }
+                },
                 div {
                     textarea {
                         class: "w-full resize-none min-h-8 focus:outline-none",
@@ -116,30 +156,111 @@ pub fn ChatFragment(session_id: Memo<String>) -> Element {
                         oninput: move |evt| {
                             draft_signal.set(evt.value());
                         },
+                        onkeydown: move |event| async move {
+                            if event.key() == Key::Enter&&!event.modifiers().shift()&&!event.modifiers().ctrl() {
+                                send_message_callback().await;
+                            }
+                        },
+                    
                     }
                 }
                 div { class: "flex flex-row",
+                    label { r#for: "message-upload-file",
+                        img {
+                            class: "size-6",
+                            alt: "send files",
+                            src: FILE_MULTIPLE,
+                        }
+                        input {
+                            r#type: "file",
+                            multiple: true,
+                            id: "message-upload-file",
+                            class: "hidden",
+                            oninput: move |evt| {
+                                evt.prevent_default();
+                                async move {
+                                    if let Some(fe) = evt.files() {
+                                        let mut files = handle_files(fe).await;
+                                        if let (1, Some(f)) = (files.len(), files.into_iter().next()) {
+                                            if f.content_type.type_() == "text" {
+                                                let mut draft = draft_signal.peek().to_string();
+                                                let str = String::from_utf8_lossy(&f.data);
+                                                draft_signal.set(draft + &str);
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    }
+                    input {
+                        r#type: "image",
+                        alt: "voice input",
+                        src: MICROPHONE,
+                        class: "size-6",
+                    }
                     span { class: "flex-1" }
                     input {
-                        class: "disabled:text-gray-400",
-                        r#type: "button",
-                        disabled: draft_signal.read().is_empty() || session_read.is_locking(),
-                        value: "发送",
-                        onclick: move |_| async move {
-                            let draft = draft_signal.peek().to_string();
-                            let session_id = session_id.peek().to_string();
-                            match start_inference(session_id.clone(), draft).await {
-                                Ok(_) => {
-                                    *draft_signal.write() = String::new();
-                                }
-                                Err(err) => {
-                                    debug!("start failed error : {err}");
-                                }
-                            }
+                        class: "size-6",
+                        r#type: "image",
+                        src: ARROW_DOWN_CIRCLE,
+                        alt: "let ai guess",
+                        onclick:move|_|async move{
+                                     start_inference(session_id.peek().to_string(),None).await;
                         },
+                    }
+                    input {
+                        class: "size-6",
+                        r#type: "image",
+                        src: ARROW_UP_CIRCLE,
+                        alt: "send message",
+                        disabled: draft_signal.read().is_empty() || session_read.is_locking(),
+                        onclick: move |_| send_message_callback(),
                     }
                 }
             }
         }
     }
+}
+pub struct File {
+    pub name: String,
+    pub md5: Vec<u8>,
+    pub sha1: Vec<u8>,
+    pub sha256: Vec<u8>,
+    pub sha512: Vec<u8>,
+    pub data: Vec<u8>,
+    pub content_type: Mime,
+}
+
+async fn handle_files(fe: Arc<dyn FileEngine>) -> Vec<File> {
+    let mut files = Vec::new();
+    for file_name in fe.files().into_iter() {
+        if let Some(file) = fe.read_file(&file_name).await {
+            let mut md5_hasher = Md5::new();
+            let mut sha1_hasher = Sha1::new();
+            let mut sha256_hasher = Sha256::new();
+            let mut sha512_hasher = Sha512::new();
+
+            md5_hasher.update(file.as_slice());
+            sha1_hasher.update(file.as_slice());
+            sha256_hasher.update(file.as_slice());
+            sha512_hasher.update(file.as_slice());
+
+            let mut md5 = md5_hasher.finalize().to_vec();
+            let mut sha1 = sha1_hasher.finalize().to_vec();
+            let mut sha256 = sha256_hasher.finalize().to_vec();
+            let mut sha512 = sha512_hasher.finalize().to_vec();
+
+            files.push(File {
+                content_type: mime_guess::from_path(&file_name).first_or_text_plain(),
+                name: file_name,
+                md5,
+                sha1,
+                sha256,
+                sha512,
+                data: file,
+            });
+        };
+    }
+    files
 }

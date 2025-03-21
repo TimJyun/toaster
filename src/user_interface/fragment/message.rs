@@ -6,13 +6,14 @@ use async_openai_wasm::types::{
     ChatCompletionRequestUserMessageContentPart,
 };
 use dioxus::prelude::*;
+use uuid::Uuid;
 
 #[component]
 pub fn MessageFragment(session: MappedSignal<Session>) -> Element {
     let session_read = session.read();
+
     let msg = session_read.messages.iter().filter_map(|m| {
         let mut is_user_sender: bool = m.role == Role::User;
-
         let msg = &m.text;
         let msg_dlg = if is_user_sender {
             rsx! {
@@ -36,9 +37,14 @@ pub fn MessageFragment(session: MappedSignal<Session>) -> Element {
         {msg}
     }
 }
+#[derive(Clone, PartialEq)]
+pub struct MessageRef {
+    pub session_id: Uuid,
+    pub message_id: Uuid,
+}
 
 #[component]
-pub fn MessageBox(text: String) -> Element {
+pub fn MessageBox(message_ref: Option<MessageRef>, text: String) -> Element {
     let Text { think, main } = parse_text(text.as_str());
 
     let think_node = if think.trim().is_empty() {
